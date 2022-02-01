@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  clickhouse:
+    image: yandex/clickhouse-server
+    expose:
+      - "9000"
+      - "8123"
+    volumes:
+      - ./clickhouse:/var/lib/clickhouse
+
+  app:
+    image: python
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app:/var/lib/app
+    command: bash -c "
+      pip install -r /var/lib/app/requirements.txt &&
+      python /var/lib/app"
+
+
