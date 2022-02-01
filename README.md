@@ -77,7 +77,8 @@ Lines uploaded: 1000
 
 ## 3. ClickHouse
 
-ClickHouse is an amazing database to calculate metrics over big data. The folder is just a docker volume to hold the `trips` table. This table has the ReplacingMergeTree() engine that deduplicates data based on columns (origin_coord, destination_coord, datetime).
+ClickHouse is an amazing database to calculate metrics over big data. The main table used by the API is a ReplacingMergeTree() engine that deduplicates data based on columns (origin_coord, destination_coord, datetime).
+
 
 ___
 
@@ -90,12 +91,30 @@ After starting docker, run docker compose on this repository.
 ```
 $ docker-compose up
 ```
-Containers can take a while to fully initialize. Add time later, load the data.
+Containers can take a while to fully initialize. Once the ClickHouse is up, we have to create da database and table running inside the docker.
+```
+docker exec -it <docker_id> bash
+```
+
+```
+clickhouse-client -m -n -q "CREATE DATABASE jobsity;
+CREATE TABLE jobsity.trips (
+    region String,
+    origin_coord Tuple(Float32, Float32),
+    destination_coord Tuple(Float32, Float32),
+    datetime datetime,
+    datasource String
+) ENGINE = ReplacingMergeTree()
+PARTITION BY toYYYYMM(datetime)
+ORDER BY (origin_coord, destination_coord, datetime);"
+```
+Now, we are ready to upload some data.
+
 ```
 $ python uploader -p trips.csv
 Lines uploaded: 1000
 ```
-Now you may be ready to get some metrics
+And ready to get some metrics
 ```
 GET http://localhost:8080/trips/getAverage?f_region=Prague
 ```

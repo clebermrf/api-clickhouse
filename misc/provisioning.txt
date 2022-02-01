@@ -1,4 +1,4 @@
-CREATE DATABASE jobsity;
+clickhouse-client -m -n -q "CREATE DATABASE jobsity;
 CREATE TABLE jobsity.trips (
     region String,
     origin_coord Tuple(Float32, Float32),
@@ -7,4 +7,4 @@ CREATE TABLE jobsity.trips (
     datasource String
 ) ENGINE = ReplacingMergeTree()
 PARTITION BY toYYYYMM(datetime)
-ORDER BY (origin_coord, destination_coord, datetime);
+ORDER BY (origin_coord, destination_coord, datetime);"

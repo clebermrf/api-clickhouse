@@ -6,8 +6,6 @@ services:
     expose:
       - "9000"
       - "8123"
-    volumes:
-      - ./clickhouse:/var/lib/clickhouse
 
   app:
     image: python
