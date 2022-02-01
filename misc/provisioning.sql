@@ -1,0 +1,10 @@
+CREATE DATABASE jobsity;
+CREATE TABLE jobsity.trips (
+    region String,
+    origin_coord Tuple(Float32, Float32),
+    destination_coord Tuple(Float32, Float32),
+    datetime datetime,
+    datasource String
+) ENGINE = ReplacingMergeTree()
+PARTITION BY toYYYYMM(datetime)
+ORDER BY (origin_coord, destination_coord, datetime);
