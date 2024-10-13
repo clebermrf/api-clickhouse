@@ -133,3 +133,61 @@ async def get_average(
 
     result = clickhouse_client.query(query)
     return {"weeklyAverage": dict(result.result_rows)}
+
+
+@router.get("/trips/getCommonAreas")
+async def get_common_areas(
+    f_origin: Optional[str] = None,
+    f_destination: Optional[str] = None,
+    f_region: Optional[str] = None,
+):
+    clickhouse_client = clickhouse_connect.get_client(
+        host=CLICKHOUSE_HOST,
+        user=CLICKHOUSE_USER,
+        password=CLICKHOUSE_PASSWORD,
+        secure=True,
+        database="challenge",
+    )
+
+    rules = ["1 = 1"]
+    if f_origin:
+        a, b, x, y = re.findall(r"[0-9]*\.[0-9]*", f_origin)
+        rules.append(
+            f"pointInPolygon(origin_coord, [({a}, {b}), ({x}, {b}), ({x}, {y}), ({a}, {y})])"
+        )
+
+    if f_destination:
+        a, b, x, y = re.findall(r"[0-9]*\.[0-9]*", f_destination)
+        rules.append(
+            f"pointInPolygon(destination_coord, [({a}, {b}), ({x}, {b}), ({x}, {y}), ({a}, {y})])"
+        )
+
+    if f_region:
+        rules.append(f"region = '{f_region}'")
+
+    query = f"""
+        SELECT
+            region,
+            concat(
+                trunc(origin_coord.1, 1), '-',
+                trunc(origin_coord.2, 1)
+            ) AS origin_area,
+            concat(
+                trunc(destination_coord.1, 1), '-',
+                trunc(destination_coord.2, 1)
+            ) AS destination_area,
+            count() AS trips
+        FROM 
+            trips
+        WHERE
+            {(' AND ').join(rules)}
+        GROUP BY
+            region,
+            origin_area,
+            destination_area
+        ORDER BY
+            trips DESC
+    """
+
+    result = clickhouse_client.query_df(query)
+    return {"commonAreas": result.to_dict(orient='records')}
