@@ -1,6 +1,0 @@
-pandas==1.4.0
-requests==2.27.1
-fastapi==0.73.0
-clickhouse_driver==0.2.2
-pydantic==1.9.0
-uvicorn==0.17.1
